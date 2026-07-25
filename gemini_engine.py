@@ -1,8 +1,3 @@
-"""
-Code Whisperer - Gemini AI Engine
-Handles communication with Google's Gemini API.
-"""
-
 import google.generativeai as genai
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from config import config
@@ -10,11 +5,9 @@ from utils import cache
 
 
 class GeminiEngine:
-    """Gemini API wrapper."""
-
     def __init__(self, api_key: str):
         if not api_key:
-            raise ValueError("Gemini API key is required.")
+            raise ValueError("API key is required")
 
         genai.configure(api_key=api_key)
 
@@ -43,15 +36,25 @@ class GeminiEngine:
         if cached:
             return cached + "\n\n*(Retrieved from cache)*"
 
-        prompt = f"""
-You are a senior software architect.
+        prompt = (
+            "You are a senior software architect mentoring a junior developer.\n\n"
+            "The developer inherited an AI-generated codebase and needs to understand it.\n\n"
+            f"Parsed Summary:\n{parsed_summary}\n\n"
+            "Source Code:\n\n"
+            f"{code[:15000]}\n\n"
+            "Explain:\n"
+            "1. Purpose\n"
+            "2. Architecture\n"
+            "3. Main functions\n"
+            "4. Main classes\n"
+            "5. Data flow\n"
+            "6. Entry points\n"
+            "7. Security concerns\n"
+            "8. Suggested improvements\n"
+        )
 
-Explain the following codebase in simple English.
+        explanation = self._call_api(prompt)
 
-Parsed Summary:
-{parsed_summary}
+        cache.set(cache_key, explanation)
 
-Source Code:
-
-```python
-{code[:15000]}
+        return explanation
